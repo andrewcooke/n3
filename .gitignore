@@ -1,4 +1,11 @@
+
 *.py[cod]
+.idea
+*.iml
+*~
+env
+
+
 
 # C extensions
 *.so
