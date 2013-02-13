@@ -1,5 +1,6 @@
 
 from logging import getLogger
+from os import chmod
 from os.path import join, expanduser
 
 from OpenSSL.crypto import PKey, TYPE_RSA, X509, X509Extension, \
@@ -27,13 +28,13 @@ def create_self_signed_cacert():
     cacert.sign(cakey, 'sha1')
     return cacert, cakey
 
-def create_session_cert(cacert, cakey):
+def create_session_cert(cacert, cakey, cn='localhost', serial=1):
     LOG.debug('Creating session certificate')
     key = PKey()
     key.generate_key(TYPE_RSA, 1024)
     cert = X509()
-    cert.get_subject().CN = 'localhost'
-    cert.set_serial_number(1)
+    cert.get_subject().CN = cn
+    cert.set_serial_number(serial)
     cert.gmtime_adj_notBefore(0)
     cert.gmtime_adj_notAfter(365*24*60*60)
     cert.set_issuer(cacert.get_subject())
@@ -41,14 +42,16 @@ def create_session_cert(cacert, cakey):
     cert.sign(cakey, 'sha1')
     return cert, key
 
-def write_session_cert(cert, dir):
-    path = join(expanduser(dir), 'session-cert.pem')
-    LOG.debug('Writing session certificate to {}'.format(path))
+def write_cert(cert, dir, name):
+    path = join(expanduser(dir), name)
+    LOG.debug('Writing certificate to {}'.format(path))
     with open(path, 'w') as output:
         print(dump_certificate(FILETYPE_PEM, cert).decode('utf8'), end='', file=output)
+    chmod(path, 0o600)
 
-def write_session_key(key, dir):
-    path = join(expanduser(dir), 'session-key.pem')
-    LOG.debug('Writing session key to {}'.format(path))
+def write_key(key, dir, name):
+    path = join(expanduser(dir), name)
+    LOG.debug('Writing key to {}'.format(path))
     with open(path, 'w') as output:
         print(dump_privatekey(FILETYPE_PEM, key).decode('utf8'), end='', file=output)
+    chmod(path, 0o600)
