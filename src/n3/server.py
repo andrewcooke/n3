@@ -3,7 +3,9 @@ from argparse import ArgumentParser
 from logging import getLogger
 from socketserver import BaseRequestHandler, TCPServer
 from n3.support.cert import create_self_signed_cacert, create_session_cert, \
-    write_session_cert, write_session_key, write_cert, write_key
+    write_cert, write_key
+from n3.support.web import SecureHTTPServer
+from os.path import expanduser
 
 from rdflib import Graph
 
@@ -26,6 +28,7 @@ def start():
     start_server(args.bind, args.port, args.config)
 
 def create_certs(dir):
+    return
     cacert, cakey = create_self_signed_cacert()
     write_cert(cacert, dir, 'ca-cert.pem')
 #    write_key(cakey, dir, 'ca-key.pem')
@@ -49,7 +52,7 @@ def start_server(bind, port, dir):
             print(self.data)
             self.request.sendall(self.data.upper())
 
-    server = TCPServer((bind, port), N3Handler)
+    server = SecureHTTPServer((bind, port), N3Handler, expanduser(dir))
     server.serve_forever()
 
 def make_parser():
